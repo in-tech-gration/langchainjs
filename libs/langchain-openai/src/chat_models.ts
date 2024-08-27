@@ -787,6 +787,51 @@ export interface ChatOpenAIFields
  * </details>
  *
  * <br />
+ *
+ * <details>
+ * <summary><strong>JSON Schema Structured Output</strong></summary>
+ *
+ * ```typescript
+ * const llmForJsonSchema = new ChatOpenAI({
+ *   model: "gpt-4o-2024-08-06",
+ * }).withStructuredOutput(
+ *   z.object({
+ *     command: z.string().describe("The command to execute"),
+ *     expectedOutput: z.string().describe("The expected output of the command"),
+ *     options: z
+ *       .array(z.string())
+ *       .describe("The options you can pass to the command"),
+ *   }),
+ *   {
+ *     method: "jsonSchema",
+ *     strict: true, // Optional when using the `jsonSchema` method
+ *   }
+ * );
+ *
+ * const jsonSchemaRes = await llmForJsonSchema.invoke(
+ *   "What is the command to list files in a directory?"
+ * );
+ * console.log(jsonSchemaRes);
+ * ```
+ *
+ * ```txt
+ * {
+ *   command: 'ls',
+ *   expectedOutput: 'A list of files and subdirectories within the specified directory.',
+ *   options: [
+ *     '-a: include directory entries whose names begin with a dot (.).',
+ *     '-l: use a long listing format.',
+ *     '-h: with -l, print sizes in human readable format (e.g., 1K, 234M, 2G).',
+ *     '-t: sort by time, newest first.',
+ *     '-r: reverse order while sorting.',
+ *     '-S: sort by file size, largest first.',
+ *     '-R: list subdirectories recursively.'
+ *   ]
+ * }
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class ChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
@@ -1210,7 +1255,7 @@ export class ChatOpenAI<
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = { ...newTokenIndices };
-      if (choice.finish_reason !== undefined) {
+      if (choice.finish_reason != null) {
         generationInfo.finish_reason = choice.finish_reason;
         // Only include system fingerprint in the last chunk for now
         // to avoid concatenation issues
